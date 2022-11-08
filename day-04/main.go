@@ -10,6 +10,8 @@ import (
 	"strings"
 )
 
+type Passport map[string]string
+
 func main() {
 	passports, err := readPassports("input.txt")
 	if err != nil {
@@ -20,17 +22,17 @@ func main() {
 	fmt.Println(partTwo(passports))
 }
 
-func partOne(passports []map[string]string) int {
+func partOne(passports []Passport) int {
 	validCount := 0
 	for _, passport := range passports {
-		if containsRequiredFields(passport) {
+		if passport.containsRequiredFields() {
 			validCount++
 		}
 	}
 	return validCount
 }
 
-func containsRequiredFields(passport map[string]string) bool {
+func (passport Passport) containsRequiredFields() bool {
 	_, byrOK := passport["byr"]
 	_, iyrOK := passport["iyr"]
 	_, eyrOK := passport["eyr"]
@@ -41,18 +43,18 @@ func containsRequiredFields(passport map[string]string) bool {
 	return byrOK && iyrOK && eyrOK && hgtOK && hclOK && eclOK && pidOK
 }
 
-func partTwo(passports []map[string]string) int {
+func partTwo(passports []Passport) int {
 	validCount := 0
 	for _, passport := range passports {
-		if isValid(passport) {
+		if passport.isValid() {
 			validCount++
 		}
 	}
 	return validCount
 }
 
-func isValid(passport map[string]string) bool {
-	if !containsRequiredFields(passport) {
+func (passport Passport) isValid() bool {
+	if !passport.containsRequiredFields() {
 		return false
 	}
 	return isBYRValid(passport["byr"]) && isIYRValid(passport["iyr"]) &&
@@ -138,8 +140,8 @@ func isPIDValid(pid string) bool {
 	return err == nil
 }
 
-func readPassports(fileName string) ([]map[string]string, error) {
-	passports := []map[string]string{}
+func readPassports(fileName string) ([]Passport, error) {
+	passports := []Passport{}
 	file, err := os.Open(fileName)
 	if err != nil {
 		return nil, err
@@ -147,17 +149,17 @@ func readPassports(fileName string) ([]map[string]string, error) {
 
 	defer file.Close()
 	scanner := bufio.NewScanner(file)
-	currentPassport := map[string]string{}
+	currentPassport := Passport{}
 	for scanner.Scan() {
 		if scanner.Text() == "" {
 			passports = append(passports, currentPassport)
-			currentPassport = map[string]string{}
+			currentPassport = Passport{}
 		} else {
 			fields := strings.Split(scanner.Text(), " ")
 			for _, field := range fields {
 				keyValuePair := strings.Split(field, ":")
 				if len(keyValuePair) < 2 {
-					return []map[string]string{}, errors.New("field does not contain key value pair")
+					return []Passport{}, errors.New("field does not contain key value pair")
 				}
 
 				currentPassport[keyValuePair[0]] = keyValuePair[1]
